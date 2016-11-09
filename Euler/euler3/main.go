@@ -9,22 +9,44 @@ import (
 	"strings"
 )
 
+const size = 64
+
+type bits uint64
+
+// BitSet is a set of bits that can be set, cleared and queried.
+type BitSet []bits
+
+// Set ensures that the given bit is set in the BitSet.
+func (s *BitSet) Set(i uint64) {
+	(*s)[i/size] |= 1 << (i % size)
+}
+
+// Clear ensures that the given bit is cleared (not set) in the BitSet.
+func (s *BitSet) Clear(i uint64) {
+	(*s)[i/size] &^= 1 << (i % size)
+}
+
+// IsSet returns true if the given bit is set, false if it is cleared.
+func (s *BitSet) IsSet(i uint64) bool {
+	return (*s)[i/size]&(1<<(i%size)) != 0
+}
+
 func sieveOfEratosthenes(N uint64) (primes []uint64) {
-	// TODO(rbtz): convert to bitmask
 	primes = append(primes, 2)
 
-	b := make([]bool, N)
+	b := make(BitSet, N)
 	for i := uint64(3); i <= uint64(math.Sqrt(float64(N))); i += 2 {
-		if b[i] == true {
+		if b.IsSet(i) {
 			continue
 		}
 		for k := i * i; k < N; k += i {
-			b[k] = true
+			b.Set(k)
 		}
 	}
 
+	// TODO(rbtz): use bitmask directly without copying it
 	for i := uint64(3); i < N; i += 2 {
-		if b[i] == false {
+		if !b.IsSet(i) {
 			primes = append(primes, i)
 		}
 	}
