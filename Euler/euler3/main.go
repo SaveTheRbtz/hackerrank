@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -10,16 +11,21 @@ import (
 
 func sieveOfEratosthenes(N uint64) (primes []uint64) {
 	// TODO(rbtz): convert to bitmask
+	primes = append(primes, 2)
+
 	b := make([]bool, N)
-	// TODO(rbtz): skip even
-	// TODO(rbtz): up to sqrt(N)
-	for i := uint64(2); i < N; i++ {
+	for i := uint64(3); i <= uint64(math.Sqrt(float64(N))); i += 2 {
 		if b[i] == true {
 			continue
 		}
-		primes = append(primes, i)
 		for k := i * i; k < N; k += i {
 			b[k] = true
+		}
+	}
+
+	for i := uint64(3); i < N; i += 2 {
+		if b[i] == false {
+			primes = append(primes, i)
 		}
 	}
 	return
@@ -50,9 +56,9 @@ func main() {
 	primes := sieveOfEratosthenes(biggest + 1)
 	lPrimes := len(primes)
 
-	//TODO(rbtz): cache?
 	for _, n := range input {
 		for i := lPrimes - 1; i > 0; i-- {
+			// TODO(rbtz): skip primes bigger than n
 			if n%primes[i] == 0 {
 				fmt.Println(primes[i])
 				break
