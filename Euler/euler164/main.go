@@ -3,81 +3,57 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"math"
 	"os"
-	"runtime"
 	"strconv"
 	"strings"
-	"sync"
-	"sync/atomic"
 )
 
 const (
-	resultMoulus = 1000000000 + 7
-	charDiff     = 48 * 3
+	resultMoulus = 1000000007
 )
 
-var (
-	wg        sync.WaitGroup
-	goMaxProc = runtime.GOMAXPROCS(0)
-)
+type countTable map[int]map[int]map[int]uint64
 
-func genMDigitNumbers(m int, c chan string, quit chan struct{}, numWorkers int) {
-	for i := uint64(math.Pow10(m - 1)); i < uint64(math.Pow10(m)); i++ {
-		fmt.Println(i)
-		c <- strconv.FormatUint(i, 10)
+func recurseDigits(t countTable, i1, i2, n int) uint64 {
+	if n == 0 {
+		return 1
 	}
-	for i := 0; i < numWorkers; i++ {
-		quit <- struct{}{}
+
+	if _, ok := t[i1]; !ok {
+		t[i1] = make(map[int]map[int]uint64)
 	}
-}
+	if _, ok := t[i1][i2]; !ok {
+		t[i1][i2] = make(map[int]uint64)
+	}
 
-func worker(
-	quit chan struct{},
-	numbers chan string,
-	wg *sync.WaitGroup,
-	result *uint64) {
-
-	defer wg.Done()
-
-NumberSelect:
-	for {
-		select {
-		case number := <-numbers:
-			numLen := len(number)
-			// TODO(rbtz): table lookup
-			for i := 0; i < numLen-2; i++ {
-				if number[i]+number[i+1]+number[i+2]-charDiff > 9 {
-					continue NumberSelect
-				}
-			}
-			atomic.AddUint64(result, 1)
-		case <-quit:
-			return
+	if t[i1][i2][n] == 0 {
+		for i := 0; i < 10-i2-i1; i++ {
+			t[i1][i2][n] += recurseDigits(t, i2, i, n-1)
 		}
 	}
+
+	return t[i1][i2][n] % resultMoulus
 }
 
 func main() {
 	var result uint64
 
-	// Spawn workers
-	numbers := make(chan string, goMaxProc)
-	quit := make(chan struct{})
-	for i := 0; i < goMaxProc; i++ {
-		wg.Add(1)
-		go worker(quit, numbers, &wg, &result)
-	}
-
-	// Produce data
+	// Get input
 	reader := bufio.NewReader(os.Stdin)
 	mStr, _ := reader.ReadString('\n')
 	m, _ := strconv.Atoi(strings.TrimSpace(mStr))
 	if m > 100 || m < 3 {
 		panic("m is out of bounds")
 	}
-	go genMDigitNumbers(m, numbers, quit, goMaxProc)
 
-	wg.Wait()
-	fmt.Println(result % resultMoulus)
+	// Recursively compute num of digits
+	t := make(countTable)
+	for i1 := 1; i1 < 10; i1++ {
+		for i2 := 0; i2 < 10-i1; i2++ {
+			result += recurseDigits(t, i1, i2, m-2)
+			result %= resultMoulus
+		}
+	}
+
+	fmt.Println(result)
 }
