@@ -90,6 +90,7 @@ func main() {
 
 	// Initialize bitset
 	bitset := sieveOfEratosthenes(biggest + 1)
+	// TODO(rbtz): run in parallel
 	for _, n := range input {
 		current := n
 		for {
