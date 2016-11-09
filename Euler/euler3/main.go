@@ -9,6 +9,10 @@ import (
 	"strings"
 )
 
+const (
+	epsilon = 5
+)
+
 func sieveOfEratosthenes(N uint64) (primes []uint64) {
 	// TODO(rbtz): convert to bitmask
 	primes = append(primes, 2)
@@ -57,10 +61,18 @@ func main() {
 	lPrimes := len(primes)
 
 	for _, n := range input {
-		for i := lPrimes - 1; i > 0; i-- {
-			// TODO(rbtz): skip primes bigger than n
-			if n%primes[i] == 0 {
-				fmt.Println(primes[i])
+
+		// Approximate number of primes below n
+		maxIndex := uint64(lPrimes - 1)
+		calcMax := uint64(float64(n)/(math.Log(float64(n))-1.1)) + epsilon
+		if calcMax < maxIndex {
+			maxIndex = calcMax
+		}
+
+		for i := maxIndex; i > 0; i-- {
+			p := primes[i]
+			if n%p == 0 {
+				fmt.Println(p)
 				break
 			}
 		}
