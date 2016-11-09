@@ -11,7 +11,7 @@ import (
 
 type indexedValue struct {
 	index int
-	value int
+	value uint64
 }
 
 type resultValue struct {
@@ -41,7 +41,7 @@ func main() {
 	input := make([]indexedValue, t)
 	for i := 0; i < t; i++ {
 		nStr, _ := reader.ReadString('\n')
-		n, _ := strconv.Atoi(strings.TrimSpace(nStr))
+		n, _ := strconv.ParseUint(strings.TrimSpace(nStr), 10, 100)
 		input[i] = indexedValue{i, n}
 	}
 
@@ -51,28 +51,30 @@ func main() {
 	// Init cache
 	resultCache := make([]resultValue, t)
 
-	for _, m := range input {
-		var result, maxR uint64
-		var maxV int
+	for j, m := range input {
+		var result uint64
+		start := uint64(0)
 
 		// Lookup in cache
-		for _, c := range resultCache {
-			if c.result > maxR {
-				maxR = c.result
-				maxV = c.input.value
+		for i := t - 1; i >= 0; i-- {
+			r := resultCache[i]
+			if r.result > 0 {
+				result = r.result
+				start = r.input.value
+				break
 			}
 		}
-		result = maxR
 
-		for i := maxV; i < m.value; i++ {
+		// TODO(rbtz): Optimize this
+		for i := start; i < m.value; i++ {
 			if i%3 == 0 || i%5 == 0 {
-				result += uint64(i)
+				result += i
 			}
 		}
-		resultCache[m.index] = resultValue{result, m}
+		resultCache[j] = resultValue{result, m}
 	}
 
-	// Sort input by value
+	// Sort results
 	sort.Sort(byInputIndex{resultCache})
 
 	// Print results
