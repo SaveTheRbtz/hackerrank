@@ -80,6 +80,17 @@ func main() {
 		input[i] = n
 	}
 
+	// Reduce input
+	for i := range input {
+		for input[i] > 2 {
+			if input[i]%2 == 0 {
+				input[i] /= 2
+			} else {
+				break
+			}
+		}
+	}
+
 	// Find max
 	biggest := uint64(0)
 	for _, n := range input {
