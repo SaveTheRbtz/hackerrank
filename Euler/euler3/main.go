@@ -44,7 +44,7 @@ func (s *BitSet) PrevUnset(current uint64) uint64 {
 			return i
 		}
 	}
-	return 0 // XXX should never happen
+	return 0
 }
 
 func sieveOfEratosthenes(N uint64) (b BitSet) {
